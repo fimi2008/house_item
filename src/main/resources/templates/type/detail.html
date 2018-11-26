@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>清单详情</title>
+    <link href="/css/bootstrap.css" rel="stylesheet"/>
+    <link href="/css/index.css" rel="stylesheet"/>
+    <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="/js/jquery-1.11.0.min.js"></script>
+    <script src="/js/bootstrap.js"></script>
+</head>
+<body>
+<nav th:replace="common/top::top"></nav>
+<div class="container-fluid">
+    <div class="row">
+        <nav th:replace="common/left::left(0)"></nav>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            <h2 class="sub-header">清单详情</h2>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">清单类型</label>
+                <div class="col-sm-10">
+                    <p class="form-control-static" th:text="${data.type}"></p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">创建时间</label>
+                <div class="col-sm-10">
+                    <p class="form-control-static"
+                       th:text="${data.createTime != null}?${#calendars.format(data.createTime,'yyyy-MM-dd HH:mm:ss')}:''"></p>
+                </div>
+            </div>
+            <h2 class="sub-header">采购清单</h2>
+            <table class="table table-bordered" th:if="!${#lists.isEmpty(data.bills)}">
+                <thead>
+                <tr>
+                    <th class="col-sm-2 col-md-2">名称</th>
+                    <th class="col-sm-1 col-md-1">数目</th>
+                    <th th:if="!${#lists.isEmpty(data.checkedBrands)}" th:each="item : ${data.checkedBrands}"
+                        th:text="${item.name}"></th>
+                </tr>
+                </thead>
+                <tbody id="dataBody">
+                <tr th:each="item : ${data.bills}" th:attrappend="billId=${item.id}">
+                    <td th:text="${item.name}"></td>
+                    <td th:text="${item.num}"></td>
+                    <td th:if="!${#lists.isEmpty(item.brandPriceList)}" th:each="sub : ${item.brandPriceList}">
+                        <img th:if="${sub.fileId}" th:src="@{/upload/show(id=${sub.fileId})}" width="200px"
+                             class="billImg"
+                             height="200px" th:attrappend="brandId=${sub.brandId}"/>
+                        <input type="number" class="priceInput form-control" th:attrappend="brandId=${sub.brandId}"
+                               th:value="${sub.price}"/>
+                        <button type="button" class="btn btn-primary uploadBillImg" th:unless="${sub.fileId}"
+                                th:attrappend="brandId=${sub.brandId}">添加图片
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">总计</td>
+                    <td th:if="!${#lists.isEmpty(data.checkedBrands)}" th:each="item : ${data.checkedBrands}"
+                        title="单击计算该列总金额"
+                        class="totalTD" th:attrappend="totalId=${item.id}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div>
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#billModal">新增</button>
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#brandModal">添加品牌</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="billModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">新增清单</h4>
+            </div>
+            <div class="modal-body">
+                <form id="dataForm">
+                    <div class="form-group">
+                        <label for="name">名称</label>
+                        <input class="form-control" type="text" size="20" name="name" id="name"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="num">数目</label>
+                        <input class="form-control" type="number" name="num" id="num"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button th:attrappend="typeId=${data.id}" type="button" class="btn btn-primary">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="brandModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">选择品牌</h4>
+            </div>
+            <div class="modal-body">
+                <form id="brandForm">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>选择</th>
+                            <th>品牌名称</th>
+                            <th class="col-sm-8 col-md-8">备注</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="data : ${data.brands}">
+                            <td>
+                                <input type="checkbox" th:checked="${data.checked}" name="brandIds"
+                                       th:value="${data.id}"/>
+                            </td>
+                            <td th:text="${data.name}"></td>
+                            <td th:text="${data.note}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button th:attrappend="typeId=${data.id}" type="button" class="btn btn-primary">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">上传文件</h4>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm" action="/billImg" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="file">选择文件</label>
+                        <input type="file" name="file" id="file" accept="image/*"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        // 新增
+        $('#billModal .btn-primary').on('click', function () {
+            let typeId = $(this).attr("typeId");
+            console.log(typeId);
+            let data = $('#dataForm').serialize();
+            console.log(data);
+            data += "&typeId=" + typeId;
+            console.log(data);
+            $.ajax({
+                url: '/bill/add',
+                type: 'POST',
+                data: data,
+                beforeSend: function () {
+                    console.log("正在进行，请稍候");
+                },
+                success: function (data) {
+                    if (data.success) {
+                        $('#billModal').modal('hide');
+                        window.location.reload();
+                    } else {
+                        alert(data.errorMsg);
+                    }
+                },
+                error: function () {
+                    console.log("error");
+                }
+            });
+        });
+
+        // 新增
+        $('#brandModal .btn-primary').on('click', function () {
+            let typeId = $(this).attr("typeId");
+            console.log(typeId);
+            let data = $('#brandForm').serialize();
+            console.log(data);
+            data += "&typeId=" + typeId;
+            console.log(data);
+            $.ajax({
+                url: '/type/relateBrand',
+                type: 'POST',
+                data: data,
+                beforeSend: function () {
+                    console.log("正在进行，请稍候");
+                },
+                success: function (data) {
+                    if (data.success) {
+                        $('#brandModal').modal('hide');
+                        window.location.reload();
+                    } else {
+                        alert(data.errorMsg);
+                    }
+                },
+                error: function () {
+                    console.log("error");
+                }
+            });
+        });
+
+        // 修改金额
+        $('.priceInput').on('blur', function () {
+            let brandId = $(this).attr('brandId');
+            let billId = $(this).closest('tr').attr('billId');
+            let price = $(this).val();
+            console.log("billId=" + billId + ",brandId=" + brandId);
+            let data = {
+                brandId: brandId,
+                billId: billId,
+                price: price
+            };
+            $.ajax({
+                url: '/type/updatePrice',
+                type: 'POST',
+                data: data,
+                beforeSend: function () {
+                    console.log("正在进行，请稍候");
+                },
+                success: function (data) {
+                    if (data.success) {
+                        // $('#brandModal').modal('hide');
+                        // window.location.reload();
+                        console.log(data);
+                    } else {
+                        alert(data.errorMsg);
+                    }
+                },
+                error: function () {
+                    console.log("error");
+                }
+            });
+        });
+
+        // 计算总计
+        $('.totalTD').on('click', function () {
+            let totalId = $(this).attr('totalId');
+            let inputs = $('#dataBody').find('input');
+            let sum = 0.00;
+            $.each(inputs, function (index, obj) {
+                let num = $(obj).closest('tr').find('td').eq(1).text();
+                let brandId = $(obj).attr('brandId');
+                if (totalId === brandId) {
+                    let price = $(obj).val();
+                    price = parseFloat(price);
+                    num = parseInt(num);
+                    sum += price * num;
+                }
+            });
+            $(this).text(sum);
+        });
+
+        var uploading = false;
+        var brandId = 0;
+        var billId = 0;
+        // 打开上传页面
+        $('.uploadBillImg').on('click', function () {
+            brandId = $(this).attr('brandId');
+            billId = $(this).closest('tr').attr('billId');
+            $('#uploadModal').modal('show');
+        });
+
+        // 上传图片
+        $('#uploadModal .btn-primary').on('click', function () {
+            if (uploading) {
+                alert("文件正在上传中，请稍候");
+                return false;
+            }
+            let formData = new FormData($('#uploadForm')[0]);
+            formData.append("billId", billId);
+            formData.append("brandId", brandId);
+            $.ajax({
+                url: '/upload/billImg',
+                type: 'POST',
+                cache: false,
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: "json",
+                beforeSend: function () {
+                    console.log("正在进行，请稍候");
+                    uploading = true;
+                },
+                success: function (data) {
+                    if (data.success) {
+                        $('#uploadModal').modal('hide');
+                        window.location.reload();
+                    } else {
+                        alert(data.errorMsg);
+                    }
+                    uploading = false;
+                },
+                error: function () {
+                    console.log("error");
+                }
+            });
+        });
+
+        // 双击删除图片
+        $('.billImg').on('dblclick', function () {
+            let brandId = $(this).attr('brandId');
+            let billId = $(this).closest('tr').attr('billId');
+            var r = confirm("确认删除")
+            if (r) {
+                console.log('del')
+                $.ajax({
+                    url: '/type/delImg',
+                    type: 'POST',
+                    data: {brandId: brandId, billId: billId},
+                    beforeSend: function () {
+                        console.log("正在进行，请稍候");
+                    },
+                    success: function (data) {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(data.errorMsg);
+                        }
+                    },
+                    error: function () {
+                        console.log("error");
+                    }
+                });
+            }
+            else {
+                console.log('cancel')
+            }
+        });
+        // 删除
+        /* $('.del-btn').on('click', function () {
+             let objId = $(this).attr('objId');
+             $.ajax({
+                 url: '/type/del',
+                 type: 'POST',
+                 data: {"id": objId},
+                 beforeSend: function () {
+                     console.log("正在进行，请稍候");
+                 },
+                 success: function (data) {
+                     if (data.success) {
+                         console.log('success');
+                         window.location.reload();
+                     } else {
+                         alert(data);
+                     }
+                 },
+                 error: function () {
+                     console.log("error");
+                 }
+             });
+         })*/
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>清单类型</title>
+    <link href="/css/bootstrap.css" rel="stylesheet"/>
+    <link href="/css/index.css" rel="stylesheet"/>
+    <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="/js/jquery-1.11.0.min.js"></script>
+    <script src="/js/bootstrap.js"></script>
+</head>
+<body>
+<nav th:replace="common/top::top"></nav>
+<div class="container-fluid">
+    <div class="row">
+        <nav th:replace="common/left::left(2)"></nav>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            <h2 class="sub-header">清单类型</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>名称</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="data : ${files}">
+                        <td th:text="${data.id}"></td>
+                        <td th:text="${data.name}"></td>
+                        <!--<td><img th:src="@{/upload/show(id=${data.id})}"></td>-->
+                        <td th:text="${#dates.format(data.createTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                        <td>
+                            <a href="javascript:void(0);" class="show_img" th:attrappend="objId=${data.id}"
+                               style="margin-right: 5px">查看</a>
+                            <a class="del-btn" href="javascript:void(0);" th:attrappend="objId=${data.id}"
+                               style="margin-right: 5px">删除</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div>
+                    <button type="button" class="btn btn-info" data-toggle="modal" data-target="#saveModal">新增
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="saveModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">上传文件</h4>
+            </div>
+            <div class="modal-body">
+                <form id="applyForm" action="/upload" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="file">选择文件</label>
+                        <input type="file" name="file" id="file" accept="image/*"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade bs-example-modal-lg text-center" id="imgModal" tabindex="-1" role="dialog"
+     aria-labelledby="myLargeModalLabel">
+    <div class="modal-dialog modal-lg" style="display: inline-block; width: auto;">
+        <div class="modal-content">
+            <img id="imgInModalID" src="" style="height: 50%;width:50%;display: inline-block;vertical-align: middle;">
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        var uploading = false;
+        // 新增
+        $('#saveModal .btn-primary').on('click', function () {
+            if (uploading) {
+                alert("文件正在上传中，请稍候");
+                return false;
+            }
+            $.ajax({
+                url: '/upload',
+                type: 'POST',
+                cache: false,
+                data: new FormData($('#applyForm')[0]),
+                processData: false,
+                contentType: false,
+                dataType: "json",
+                beforeSend: function () {
+                    console.log("正在进行，请稍候");
+                    uploading = true;
+                },
+                success: function (data) {
+                    if (data.success) {
+                        $('#saveModal').modal('hide');
+                        window.location.reload();
+                    } else {
+                        alert(data.errorMsg);
+                    }
+                    uploading = false;
+                },
+                error: function () {
+                    console.log("error");
+                }
+            });
+        });
+        // 查询图片
+        $('.show_img').on('click', function () {
+            var id = $(this).attr('objId');
+            $('#imgInModalID').attr('src', '/upload/show?id=' + id);
+            $('#imgModal').modal('show');
+        });
+
+        // 删除
+        $('.del-btn').on('click', function () {
+            let objId = $(this).attr('objId');
+            $.ajax({
+                url: '/upload/del',
+                type: 'POST',
+                data: {"id": objId},
+                beforeSend: function () {
+                    console.log("正在进行，请稍候");
+                },
+                success: function (data) {
+                    if (data.success) {
+                        console.log('success');
+                        window.location.reload();
+                    } else {
+                        alert(data);
+                    }
+                },
+                error: function () {
+                    console.log("error");
+                }
+            });
+        })
+    });
+</script>
+</body>
+</html>

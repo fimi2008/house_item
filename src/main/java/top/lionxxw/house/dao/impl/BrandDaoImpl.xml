@@ -1,0 +1,122 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="top.lionxxw.house.dao.BrandDao">
+
+    <sql id="table_name">t_brand</sql>
+    <sql id="t_type_brand_temp">t_type_brand_temp</sql>
+
+    <sql id="insert_filed">
+        name
+        ,note
+    </sql>
+
+    <sql id="insert_values">
+       #{name}
+       ,#{note}
+    </sql>
+
+    <sql id="update_values">
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="note != null">
+                note = #{note},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+    </sql>
+
+    <sql id="select_filed">
+        id,<include refid="insert_filed"/>,create_time,last_update_time,status
+    </sql>
+
+    <sql id="select_where">
+        <where>
+            <if test="param.name != null">
+                AND name = #{param.name}
+            </if>
+            <if test="param.status != null ">
+                AND status = #{param.status}
+            </if>
+            <if test="param.status == null">
+                AND status = 'NOR'
+            </if>
+        </where>
+    </sql>
+
+    <insert id="insert" parameterType="top.lionxxw.house.entity.Brand" useGeneratedKeys="true" keyProperty="id">
+        INSERT
+        <include refid="table_name"/>
+        (<include refid="insert_filed"/>)
+        VALUES
+        (<include refid="insert_values"/>)
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO
+        <include refid="t_type_brand_temp" />
+        (
+        type_id,brand_id
+        )
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.typeId},
+            #{item.brandId}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM
+        <include refid="table_name"/>
+        WHERE id = #{id}
+    </delete>
+
+    <update id="update">
+        UPDATE
+        <include refid="table_name"/>
+        <include refid="update_values"/>
+        WHERE id = #{id}
+    </update>
+
+    <select id="getById" resultType="top.lionxxw.house.entity.Brand">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        WHERE id = #{id}
+    </select>
+    <select id="selectAll" resultType="top.lionxxw.house.entity.Brand">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        WHERE status = 'NOR'
+    </select>
+
+    <select id="selectParam" resultType="top.lionxxw.house.entity.Brand">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        <include refid="select_where"/>
+    </select>
+
+    <select id="selectByTypeId" resultType="top.lionxxw.house.entity.BrandCheckInfo">
+        SELECT b.id,b.name,b.note,!ISNULL(t.id) checked FROM `t_brand` b LEFT JOIN `t_type_brand_temp` t ON
+        b.`id` = t.brand_id AND t.type_id = #{typeId} AND t.status = 'NOR'
+        WHERE b.status = 'NOR'
+    </select>
+
+    <delete id="deleteByTypeId">
+        DELETE FROM
+        <include refid="t_type_brand_temp" />
+        WHERE type_id = #{typeId}
+    </delete>
+</mapper>

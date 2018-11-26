@@ -1,0 +1,102 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="top.lionxxw.house.dao.UploadFileDao">
+
+    <sql id="table_name">t_upload_file</sql>
+
+    <sql id="insert_filed">
+        name
+        ,file
+    </sql>
+
+  <!--  <resultMap id="File" type="top.lionxxw.house.entity.UploadFile">
+        <constructor>
+            <idArg column="id" javaType="long"/>
+            <arg column="name" javaType="string"/>
+        </constructor>
+        <result property="file"
+    </resultMap>-->
+
+    <sql id="insert_values">
+       #{name}
+       ,#{file,jdbcType=BLOB}
+    </sql>
+
+    <sql id="update_values">
+        <set>
+            <if test="type != null">
+                name = #{name},
+            </if>
+            <if test="file != null">
+                file = #{file},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+    </sql>
+
+    <sql id="select_filed">
+        id,<include refid="insert_filed"/>,create_time,last_update_time,status
+    </sql>
+
+    <sql id="select_where">
+        <where>
+            <if test="param.name != null">
+                AND name = #{param.name}
+            </if>
+            <if test="param.status != null ">
+                AND status = #{param.status}
+            </if>
+            <if test="param.status == null">
+                AND status = 'NOR'
+            </if>
+        </where>
+    </sql>
+
+    <insert id="insert" parameterType="top.lionxxw.house.entity.UploadFile" useGeneratedKeys="true" keyProperty="id">
+        INSERT
+        <include refid="table_name"/>
+        (<include refid="insert_filed"/>)
+        VALUES
+        (<include refid="insert_values"/>)
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM
+        <include refid="table_name"/>
+        WHERE id = #{id}
+    </delete>
+
+    <update id="update">
+        UPDATE
+        <include refid="table_name"/>
+        <include refid="update_values"/>
+        WHERE id = #{id}
+    </update>
+
+    <select id="getById" resultType="top.lionxxw.house.entity.UploadFile">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        WHERE id = #{id}
+    </select>
+    <select id="selectAll" resultType="top.lionxxw.house.entity.UploadFile">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        WHERE status = 'NOR'
+    </select>
+
+    <select id="selectParam" resultType="top.lionxxw.house.entity.UploadFile">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        <include refid="select_where"/>
+    </select>
+</mapper>

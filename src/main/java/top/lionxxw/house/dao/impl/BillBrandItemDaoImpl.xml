@@ -1,0 +1,123 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="top.lionxxw.house.dao.BillBrandItemDao">
+
+    <sql id="table_name">t_bill_brand_item</sql>
+
+    <sql id="insert_filed">
+        bill_id
+        ,brand_id
+        ,price
+        ,file_id
+    </sql>
+
+    <sql id="insert_values">
+       #{billId}
+       ,#{brandId}
+       ,#{price}
+       ,#{fileId}
+    </sql>
+
+    <sql id="update_values">
+        <set>
+            <if test="billId != null">
+                bill_id = #{billId},
+            </if>
+            <if test="brandId != null">
+                brand_id = #{brandId},
+            </if>
+            <if test="fileId != null">
+                file_id = #{fileId},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+    </sql>
+
+    <sql id="select_filed">
+        id,<include refid="insert_filed"/>,create_time,last_update_time,status
+    </sql>
+
+    <sql id="select_where">
+        <where>
+            <if test="param.billId != null">
+                AND bill_id = #{param.billId}
+            </if>
+            <if test="param.brandId != null">
+                AND brand_id = #{param.brandId}
+            </if>
+            <if test="param.status != null ">
+                AND status = #{param.status}
+            </if>
+            <if test="param.status == null">
+                AND status = 'NOR'
+            </if>
+        </where>
+    </sql>
+
+    <insert id="insert" parameterType="top.lionxxw.house.entity.BillBrandItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT
+        <include refid="table_name"/>
+        (<include refid="insert_filed"/>)
+        VALUES
+        (<include refid="insert_values"/>)
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM
+        <include refid="table_name"/>
+        WHERE id = #{id}
+    </delete>
+
+    <update id="delImg">
+        UPDATE
+        <include refid="table_name"/>
+        SET file_id = NULL
+        WHERE brand_id = #{brandId} and bill_id = ${billId}
+    </update>
+
+    <update id="update">
+        UPDATE
+        <include refid="table_name"/>
+        <include refid="update_values"/>
+        WHERE id = #{id}
+    </update>
+
+    <select id="getById" resultType="top.lionxxw.house.entity.BillBrandItem">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        WHERE id = #{id}
+    </select>
+    <select id="selectAll" resultType="top.lionxxw.house.entity.BillBrandItem">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        WHERE status = 'NOR'
+    </select>
+
+    <select id="selectParam" resultType="top.lionxxw.house.entity.BillBrandItem">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        <include refid="select_where"/>
+    </select>
+
+    <select id="selectByBrandId" resultType="top.lionxxw.house.entity.BillBrandItem">
+        SELECT
+        <include refid="select_filed"/>
+        FROM
+        <include refid="table_name"/>
+        WHERE brand_id = #{brandId}
+    </select>
+
+</mapper>
